@@ -1,0 +1,12 @@
+C:\Users\Administrator\Desktop\c#\bankingapp-dotnet-restapi-mysql-firebase\BankingApp\Contracts\bin\Debug\net5.0\Contracts.deps.json
+C:\Users\Administrator\Desktop\c#\bankingapp-dotnet-restapi-mysql-firebase\BankingApp\Contracts\bin\Debug\net5.0\Contracts.dll
+C:\Users\Administrator\Desktop\c#\bankingapp-dotnet-restapi-mysql-firebase\BankingApp\Contracts\bin\Debug\net5.0\ref\Contracts.dll
+C:\Users\Administrator\Desktop\c#\bankingapp-dotnet-restapi-mysql-firebase\BankingApp\Contracts\bin\Debug\net5.0\Contracts.pdb
+C:\Users\Administrator\Desktop\c#\bankingapp-dotnet-restapi-mysql-firebase\BankingApp\Contracts\obj\Debug\net5.0\Contracts.csproj.AssemblyReference.cache
+C:\Users\Administrator\Desktop\c#\bankingapp-dotnet-restapi-mysql-firebase\BankingApp\Contracts\obj\Debug\net5.0\Contracts.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Administrator\Desktop\c#\bankingapp-dotnet-restapi-mysql-firebase\BankingApp\Contracts\obj\Debug\net5.0\Contracts.AssemblyInfoInputs.cache
+C:\Users\Administrator\Desktop\c#\bankingapp-dotnet-restapi-mysql-firebase\BankingApp\Contracts\obj\Debug\net5.0\Contracts.AssemblyInfo.cs
+C:\Users\Administrator\Desktop\c#\bankingapp-dotnet-restapi-mysql-firebase\BankingApp\Contracts\obj\Debug\net5.0\Contracts.csproj.CoreCompileInputs.cache
+C:\Users\Administrator\Desktop\c#\bankingapp-dotnet-restapi-mysql-firebase\BankingApp\Contracts\obj\Debug\net5.0\Contracts.dll
+C:\Users\Administrator\Desktop\c#\bankingapp-dotnet-restapi-mysql-firebase\BankingApp\Contracts\obj\Debug\net5.0\ref\Contracts.dll
+C:\Users\Administrator\Desktop\c#\bankingapp-dotnet-restapi-mysql-firebase\BankingApp\Contracts\obj\Debug\net5.0\Contracts.pdb
