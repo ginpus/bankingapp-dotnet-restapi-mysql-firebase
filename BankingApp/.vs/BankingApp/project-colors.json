@@ -1,0 +1,36 @@
+{
+  "Version": 1,
+  "ProjectMap": {
+    "9addff3d-76ee-4900-ba50-ad92b720bd45": {
+      "ProjectGuid": "9addff3d-76ee-4900-ba50-ad92b720bd45",
+      "DisplayName": "RestAPI",
+      "ColorIndex": 0
+    },
+    "b379cab8-bd4c-40c1-a11c-ebdee701ce4e": {
+      "ProjectGuid": "b379cab8-bd4c-40c1-a11c-ebdee701ce4e",
+      "DisplayName": "TestHelpers",
+      "ColorIndex": 1
+    },
+    "c91db5e9-f03d-47b6-99e8-d75552321184": {
+      "ProjectGuid": "c91db5e9-f03d-47b6-99e8-d75552321184",
+      "DisplayName": "Persistence",
+      "ColorIndex": 2
+    },
+    "997647bb-0ae0-42ef-ab38-272d26ede968": {
+      "ProjectGuid": "997647bb-0ae0-42ef-ab38-272d26ede968",
+      "DisplayName": "Contracts",
+      "ColorIndex": 3
+    },
+    "7d8b51ab-6662-4a6c-9043-8c7aaa348ce0": {
+      "ProjectGuid": "7d8b51ab-6662-4a6c-9043-8c7aaa348ce0",
+      "DisplayName": "Domain",
+      "ColorIndex": 4
+    },
+    "51e53fc0-df15-4cf7-b421-e3422191038b": {
+      "ProjectGuid": "51e53fc0-df15-4cf7-b421-e3422191038b",
+      "DisplayName": "Domain.UnitTests",
+      "ColorIndex": 5
+    }
+  },
+  "NextColorIndex": 6
+}
