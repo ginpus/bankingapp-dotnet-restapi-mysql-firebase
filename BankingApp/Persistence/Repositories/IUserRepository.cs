@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Persistence.Repositories
 {
-    public interface IUsersRepository
+    public interface IUserRepository
     {
         Task<UserReadModel> GetUserAsync(string localId);
 

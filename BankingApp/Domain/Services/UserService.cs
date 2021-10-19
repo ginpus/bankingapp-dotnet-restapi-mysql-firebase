@@ -15,10 +15,10 @@ namespace Domain.Services
 {
     public class UserService : IUserService
     {
-        private readonly IUsersRepository _usersRepository;
+        private readonly IUserRepository _usersRepository;
         private readonly IAuthClient _authClient;
 
-        public UserService(IUsersRepository usersRepository, IAuthClient authClient)
+        public UserService(IUserRepository usersRepository, IAuthClient authClient)
         {
             _usersRepository = usersRepository;
             _authClient = authClient;

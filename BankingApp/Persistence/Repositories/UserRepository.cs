@@ -9,12 +9,12 @@ using System.Threading.Tasks;
 
 namespace Persistence.Repositories
 {
-    public class UsersRepository : IUsersRepository
+    public class UserRepository : IUserRepository
     {
         private const string UsersTable = "users";
         private readonly ISqlClient _sqlClient;
 
-        public UsersRepository(ISqlClient sqlClient)
+        public UserRepository(ISqlClient sqlClient)
         {
             _sqlClient = sqlClient;
         }

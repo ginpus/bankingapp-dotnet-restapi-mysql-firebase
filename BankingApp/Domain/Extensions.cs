@@ -1,4 +1,5 @@
-﻿using Domain.Client.Models.ResponseModels;
+﻿using Contracts.ResponseModels;
+using Domain.Client.Models.ResponseModels;
 using Domain.Models.RequestModels;
 using Domain.Models.ResponseModels;
 using Persistence.Models.ReadModels;
@@ -55,6 +56,16 @@ namespace Domain
                 Email = user.Email,
                 LocalId = user.LocalId,
                 IdToken = user.IdToken
+            };
+        }
+
+        public static AccountWriteModel AsDto(this AccountCreateResponse account)
+        {
+            return new AccountWriteModel
+            {
+                Iban = account.Iban,
+                Balance = account.Balance,
+                UserId = account.UserId
             };
         }
     }

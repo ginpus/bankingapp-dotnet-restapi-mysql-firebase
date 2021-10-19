@@ -23,7 +23,8 @@ namespace Domain
         private static IServiceCollection AddServices(this IServiceCollection services)
         {
             services
-                .AddSingleton<IUserService, UserService>();
+                .AddSingleton<IUserService, UserService>()
+                .AddSingleton<IAccountService, AccountService>();
 
             return services;
         }
