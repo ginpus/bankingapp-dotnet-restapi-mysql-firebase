@@ -1,4 +1,5 @@
 ﻿using Contracts.ResponseModels;
+using Domain.Models.RequestModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,5 +11,11 @@ namespace Domain.Services
     public interface IAccountService
     {
         Task<int> InsertAccountAsync(AccountCreateResponse newAccount);
+
+        Task<bool> CheckAccountAsync(string accountId, Guid userId);
+
+        Task<bool> TopUpAccount(TopUpRequestModel request);
+
+        Task<string> RandomIbanGenerator();
     }
 }

@@ -10,5 +10,9 @@ namespace Persistence.Repositories
     public interface IAccountRepository
     {
         Task<int> SaveOrUpdateAsync(AccountWriteModel model);
+
+        Task<bool> CheckAccountByUserAsync(string accountId, Guid userId);
+
+        Task<decimal> GetAccountBalanceAsync(string accountId);
     }
 }

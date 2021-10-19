@@ -1,4 +1,6 @@
-﻿using Contracts.ResponseModels;
+﻿using Contracts.RequestModels;
+using Contracts.ResponseModels;
+using Domain.Models.RequestModels;
 using Domain.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -8,13 +10,13 @@ using System.Threading.Tasks;
 namespace RestAPI.Controllers
 {
     [ApiController]
-    [Route("account")]
-    public class AccountController : ControllerBase
+    [Route("transaction")]
+    public class TransactionController : ControllerBase
     {
         private readonly IAccountService _accountService;
         private readonly IUserService _userService;
 
-        public AccountController(
+        public TransactionController(
             IAccountService accountService,
             IUserService userService)
         {
@@ -24,7 +26,8 @@ namespace RestAPI.Controllers
 
         [HttpPost]
         [Authorize]
-        public async Task<ActionResult<AccountCreateResponse>> CreateAccount()
+        [Route("topUp")]
+        public async Task<ActionResult<bool>> TopUpAccount(TopUpRequest topUpRequest)
         {
             var userId = HttpContext.User.Claims.SingleOrDefault(claim => claim.Type == "user_id");
 
@@ -35,18 +38,16 @@ namespace RestAPI.Controllers
 
             var user = await _userService.GetUserAsync(userId.Value);
 
-            var newIban = await _accountService.RandomIbanGenerator();
-
-            var newAccount = new AccountCreateResponse
+            var topUpDetails = new TopUpRequestModel
             {
-                Iban = newIban,
-                Balance = 0,
+                Iban = topUpRequest.Iban,
+                Sum = topUpRequest.Sum,
                 UserId = user.UserId
             };
 
-            await _accountService.InsertAccountAsync(newAccount);
+            var result = await _accountService.TopUpAccount(topUpDetails);
 
-            return Ok(newAccount);
+            return Ok(result);
         }
     }
 }
