@@ -58,6 +58,27 @@ namespace Domain.Services
             return result;
         }
 
+        public async Task<decimal> GetIbanBalanceAsync(AccountBalanceRequestModel request)
+        {
+            var accountExists = await _accountRepository.CheckAccountByUserAsync(request.Iban, request.UserId);
+
+            if (!accountExists)
+            {
+                throw new Exception($"Account {request.Iban} not found for your user");
+            }
+
+            var currentBalance = await _accountRepository.GetAccountBalanceAsync(request.Iban);
+
+            return currentBalance;
+        }
+
+        public async Task<decimal> GetUserBalance(Guid userId)
+        {
+            var currentBalance = await _accountRepository.GetUserBalanceAsync(userId);
+
+            return currentBalance;
+        }
+
         public async Task<string> RandomIbanGenerator()
         {
             var startWith = "LT";

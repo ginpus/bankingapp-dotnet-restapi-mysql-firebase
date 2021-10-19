@@ -56,5 +56,17 @@ namespace Persistence.Repositories
 
             return currentBalance;
         }
+
+        public async Task<decimal> GetUserBalanceAsync(Guid userId)
+        {
+            var sql = $@"SELECT sum(balance) FROM {AccountTable} where userid = @userid";
+
+            var currentBalance = await _sqlClient.QueryFirstOrDefaultAsync<decimal>(sql, new
+            {
+                userid = userId
+            });
+
+            return currentBalance;
+        }
     }
 }

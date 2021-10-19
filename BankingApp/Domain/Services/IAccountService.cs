@@ -17,5 +17,9 @@ namespace Domain.Services
         Task<bool> TopUpAccount(TopUpRequestModel request);
 
         Task<string> RandomIbanGenerator();
+
+        Task<decimal> GetIbanBalanceAsync(AccountBalanceRequestModel request);
+
+        Task<decimal> GetUserBalance(Guid userId);
     }
 }

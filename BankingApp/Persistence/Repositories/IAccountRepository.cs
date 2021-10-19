@@ -14,5 +14,7 @@ namespace Persistence.Repositories
         Task<bool> CheckAccountByUserAsync(string accountId, Guid userId);
 
         Task<decimal> GetAccountBalanceAsync(string accountId);
+
+        Task<decimal> GetUserBalanceAsync(Guid userId); 
     }
 }
