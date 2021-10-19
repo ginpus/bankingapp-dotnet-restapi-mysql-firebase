@@ -1,6 +1,7 @@
 ﻿using Domain.Client.Models.ResponseModels;
 using Domain.Models.RequestModels;
 using Domain.Models.ResponseModels;
+using Persistence.Models.ReadModels;
 using Persistence.Models.WriteModels;
 using System;
 using System.Collections.Generic;

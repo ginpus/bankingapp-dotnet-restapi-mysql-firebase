@@ -8,6 +8,7 @@ using System.Text.Json;
 using Contracts.RequestModels;
 using Contracts.ResponseModels;
 using Domain.Models.ResponseModels;
+using Domain.Services;
 
 namespace RestAPI.Controllers
 {

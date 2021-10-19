@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using MySql.Data.MySqlClient;
 using Persistence.Client;
 using Persistence.Models;
+using Persistence.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -22,15 +23,15 @@ namespace Persistence
             SqlMapper.RemoveTypeMap(typeof(Guid?));
 
             return services
-                .AddSqlClient(configuration);
-            //.AddRepositories();
+                .AddSqlClient(configuration)
+                .AddRepositories();
         }
 
-        /*        public static IServiceCollection AddRepositories(this IServiceCollection services)
-                {
-                    return services.AddSingleton<IUsersRepository, UsersRepository>()
-                        .AddSingleton<ICampgroundsRepository, CampgroundsRepository>();
-                }*/
+        public static IServiceCollection AddRepositories(this IServiceCollection services)
+        {
+            return services.AddSingleton<IUsersRepository, UsersRepository>();
+            //.AddSingleton<ICampgroundsRepository, CampgroundsRepository>();
+        }
 
         public static IServiceCollection AddSqlClient(this IServiceCollection services, IConfiguration configuration)
         {

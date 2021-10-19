@@ -9,6 +9,7 @@ using Domain.Client.Models.ResponseModels;
 using Domain.Models.ResponseModels;
 using Contracts.RequestModels;
 using Contracts.ResponseModels;
+using Persistence.Repositories;
 
 namespace Domain.Services
 {
