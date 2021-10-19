@@ -1,3 +1,4 @@
+using Domain;
 using Domain.Options;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -88,7 +89,7 @@ namespace RestAPI
             services.Configure<FirebaseSettings>(Configuration.GetSection("Firebase"));
 
             services
-                //.AddDomain()
+                .AddDomain()
                 .AddPersistence(Configuration);
 
         }

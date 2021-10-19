@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using System.Text.Json;
+using Contracts.RequestModels;
+using Contracts.ResponseModels;
+using Domain.Models.ResponseModels;
 
 namespace RestAPI.Controllers
 {
