@@ -1,4 +1,5 @@
 ﻿using Persistence.Client;
+using Persistence.Models.ReadModels;
 using Persistence.Models.WriteModels;
 using System;
 using System.Collections.Generic;
@@ -12,6 +13,7 @@ namespace Persistence.Repositories
     {
         private readonly ISqlClient _sqlClient;
         private const string TransactionTable = "transactions";
+        private const string AccountTable = "accounts";
 
         public TransactionRepository(ISqlClient sqlClient)
         {
@@ -32,6 +34,18 @@ namespace Persistence.Repositories
             });
 
             return await rowsAffected;
+        }
+
+        public async Task<IEnumerable<TransactionReadModel>> GetTransactionsAsync(Guid userId)
+        {
+            var sql = @$"SELECT {TransactionTable}.transactionid, {TransactionTable}.iban, {TransactionTable}.type, {TransactionTable}.sum, {TransactionTable}.timestamp, {TransactionTable}.description FROM {TransactionTable} JOIN {AccountTable} ON {TransactionTable}.iban = {AccountTable}.iban WHERE {AccountTable}.userid = @userid";
+
+            var result = await _sqlClient.QueryAsync<TransactionReadModel>(sql, new
+            {
+                userid = userId
+            });
+
+            return result;
         }
     }
 }

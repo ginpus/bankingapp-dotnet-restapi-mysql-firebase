@@ -23,5 +23,7 @@ namespace Domain.Services
         Task<decimal> GetIbanBalanceAsync(AccountBalanceRequestModel request);
 
         Task<decimal> GetUserBalanceAsync(Guid userId);
+
+        Task<IEnumerable<TransactionResponse>> GetAllUserTransactionsAsync(Guid userId);
     }
 }

@@ -94,5 +94,26 @@ namespace RestAPI.Controllers
 
             return Ok(currentUserBalance);
         }
+
+
+        [HttpGet]
+        [Authorize]
+        [Route("transactionHistory")]
+
+        public async Task<ActionResult<TransactionResponse>> GetAllTransactions()
+        {
+            var userId = HttpContext.User.Claims.SingleOrDefault(claim => claim.Type == "user_id");
+
+            if (userId is null)
+            {
+                return NotFound();
+            }
+
+            var user = await _userService.GetUserAsync(userId.Value);
+
+            var transactions = await _accountService.GetAllUserTransactionsAsync(user.UserId);
+
+            return Ok(transactions);
+        }
     }
 }

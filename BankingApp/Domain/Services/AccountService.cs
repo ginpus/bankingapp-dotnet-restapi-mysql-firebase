@@ -177,5 +177,21 @@ namespace Domain.Services
 
             return resultReceive;
         }
+
+        public async Task<IEnumerable<TransactionResponse>> GetAllUserTransactionsAsync(Guid userId)
+        {
+            var transactions = (await _transactionRepository.GetTransactionsAsync(userId))
+                .Select(transaction => new TransactionResponse
+                {
+                    TransactionId = transaction.TransactionId,
+                    Iban = transaction.Iban,
+                    Type = transaction.Type,
+                    Sum = transaction.Sum,
+                    Description = transaction.Description,
+                    Timestamp = transaction.Timestamp
+                });
+
+            return transactions;
+        }
     }
 }

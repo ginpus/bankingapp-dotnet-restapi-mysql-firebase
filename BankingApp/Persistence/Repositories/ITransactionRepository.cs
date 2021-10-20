@@ -1,4 +1,5 @@
-﻿using Persistence.Models.WriteModels;
+﻿using Persistence.Models.ReadModels;
+using Persistence.Models.WriteModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,5 +11,7 @@ namespace Persistence.Repositories
     public interface ITransactionRepository
     {
         Task<int> SaveTransactionAsync(TransactionWriteModel model);
+
+        Task<IEnumerable<TransactionReadModel>> GetTransactionsAsync(Guid userId);
     }
 }
