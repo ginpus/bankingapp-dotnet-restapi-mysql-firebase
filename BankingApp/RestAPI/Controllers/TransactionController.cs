@@ -45,7 +45,34 @@ namespace RestAPI.Controllers
                 UserId = user.UserId
             };
 
-            var result = await _accountService.TopUpAccount(topUpDetails);
+            var result = await _accountService.TopUpAccountAsync(topUpDetails);
+
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Authorize]
+        [Route("send")]
+        public async Task<ActionResult<bool>> SendMoney(SendMoneyRequest sendMoneyRequest)
+        {
+            var userId = HttpContext.User.Claims.SingleOrDefault(claim => claim.Type == "user_id");
+
+            if (userId is null)
+            {
+                return NotFound();
+            }
+
+            var user = await _userService.GetUserAsync(userId.Value);
+
+            var sendMoneyDetails = new SendMoneyRequestModel
+            {
+                SenderIban = sendMoneyRequest.SenderIban,
+                Sum = sendMoneyRequest.Sum,
+                ReceiverIban = sendMoneyRequest.ReceiverIban,
+                UserId = user.UserId
+            };
+
+            var result = await _accountService.SendMoneyAsync(sendMoneyDetails);
 
             return Ok(result);
         }

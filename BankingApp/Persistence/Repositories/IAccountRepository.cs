@@ -11,10 +11,14 @@ namespace Persistence.Repositories
     {
         Task<int> SaveOrUpdateAsync(AccountWriteModel model);
 
+        Task<int> SaveOrUpdateAsync(AccountSendWriteModel model);
+
         Task<bool> CheckAccountByUserAsync(string accountId, Guid userId);
 
         Task<decimal> GetAccountBalanceAsync(string accountId);
 
-        Task<decimal> GetUserBalanceAsync(Guid userId); 
+        Task<decimal> GetUserBalanceAsync(Guid userId);
+
+        Task<bool> CheckAccountByIbanAsync(string accountId);
     }
 }

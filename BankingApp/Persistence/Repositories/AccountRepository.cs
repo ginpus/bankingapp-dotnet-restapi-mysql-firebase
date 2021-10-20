@@ -31,6 +31,18 @@ namespace Persistence.Repositories
             return exists;
         }
 
+        public async Task<bool> CheckAccountByIbanAsync(string accountId)
+        {
+            var sql = @$"SELECT EXISTS(SELECT * FROM {AccountTable} WHERE iban = @iban)";
+
+            var exists = await _sqlClient.QueryFirstOrDefaultAsync<bool>(sql, new
+            {
+                iban = accountId
+            });
+
+            return exists;
+        }
+
         public async Task<int> SaveOrUpdateAsync(AccountWriteModel model)
         {
             var sqlInsert = @$"INSERT INTO {AccountTable} (iban, userid, balance) VALUES(@iban, @userid, @balance) ON DUPLICATE KEY UPDATE balance = @balance";
@@ -39,6 +51,19 @@ namespace Persistence.Repositories
             {
                 iban = model.Iban,
                 userid = model.UserId,
+                balance = model.Balance
+            });
+
+            return await rowsAffected;
+        }
+
+        public async Task<int> SaveOrUpdateAsync(AccountSendWriteModel model)
+        {
+            var sqlInsert = @$"INSERT INTO {AccountTable} (iban, balance) VALUES(@iban, @balance) ON DUPLICATE KEY UPDATE balance = @balance";
+
+            var rowsAffected = _sqlClient.ExecuteAsync(sqlInsert, new
+            {
+                iban = model.Iban,
                 balance = model.Balance
             });
 

@@ -33,7 +33,7 @@ namespace Domain.Services
             return rowsAffected;
         }
 
-        public async Task<bool> TopUpAccount(TopUpRequestModel request)
+        public async Task<bool> TopUpAccountAsync(TopUpRequestModel request)
         {
             var accountExists = await _accountRepository.CheckAccountByUserAsync(request.Iban, request.UserId);
 
@@ -72,7 +72,7 @@ namespace Domain.Services
             return currentBalance;
         }
 
-        public async Task<decimal> GetUserBalance(Guid userId)
+        public async Task<decimal> GetUserBalanceAsync(Guid userId)
         {
             var currentBalance = await _accountRepository.GetUserBalanceAsync(userId);
 
@@ -86,6 +86,54 @@ namespace Domain.Services
             var firstIbanPart = generator.Next(0, 999999999).ToString("D9");
             var secondIbanPart = generator.Next(0, 999999999).ToString("D9");
             return startWith + firstIbanPart + secondIbanPart;
+        }
+
+        public async Task<bool> SendMoneyAsync(SendMoneyRequestModel request)
+        {
+            var senderAccountExists = await _accountRepository.CheckAccountByUserAsync(request.SenderIban, request.UserId);
+
+            if (!senderAccountExists)
+            {
+                throw new Exception($"Account {request.SenderIban} not found for your user");
+            }
+
+            var receiverAccountExists = await _accountRepository.CheckAccountByIbanAsync(request.ReceiverIban);
+
+            if (!receiverAccountExists)
+            {
+                throw new Exception($"Receiver account {request.ReceiverIban} not found");
+            }
+
+            var currentSenderBalance = await _accountRepository.GetAccountBalanceAsync(request.SenderIban);
+
+            if (currentSenderBalance < request.Sum)
+            {
+                throw new Exception($"Insufficient balance. Desired send amount: {request.Sum}. Current balance: {currentSenderBalance}");
+            }
+
+            var newSenderBalance = currentSenderBalance - request.Sum;
+
+            var rowsAffetedSend = await _accountRepository.SaveOrUpdateAsync(new AccountSendWriteModel
+            {
+                Iban = request.SenderIban,
+                Balance = newSenderBalance
+            });
+
+            //bool resultSend = Convert.ToBoolean(rowsAffetedSend);
+
+            var currentReceiverBalance = await _accountRepository.GetAccountBalanceAsync(request.ReceiverIban);
+
+            var newReceiverBalance = currentReceiverBalance + request.Sum;
+
+            var rowsAffetedReceive = await _accountRepository.SaveOrUpdateAsync(new AccountSendWriteModel
+            {
+                Iban = request.ReceiverIban,
+                Balance = newReceiverBalance
+            });
+
+            bool resultReceive = Convert.ToBoolean(rowsAffetedReceive);
+
+            return resultReceive;
         }
     }
 }

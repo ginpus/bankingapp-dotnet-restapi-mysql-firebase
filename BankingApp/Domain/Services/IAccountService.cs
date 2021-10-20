@@ -14,12 +14,14 @@ namespace Domain.Services
 
         Task<bool> CheckAccountAsync(string accountId, Guid userId);
 
-        Task<bool> TopUpAccount(TopUpRequestModel request);
+        Task<bool> TopUpAccountAsync(TopUpRequestModel request);
+
+        Task<bool> SendMoneyAsync(SendMoneyRequestModel sendMoneyDetails);
 
         Task<string> RandomIbanGenerator();
 
         Task<decimal> GetIbanBalanceAsync(AccountBalanceRequestModel request);
 
-        Task<decimal> GetUserBalance(Guid userId);
+        Task<decimal> GetUserBalanceAsync(Guid userId);
     }
 }

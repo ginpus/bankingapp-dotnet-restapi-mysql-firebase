@@ -90,7 +90,7 @@ namespace RestAPI.Controllers
 
             var user = await _userService.GetUserAsync(userId.Value);
 
-            var currentUserBalance = await _accountService.GetUserBalance(user.UserId);
+            var currentUserBalance = await _accountService.GetUserBalanceAsync(user.UserId);
 
             return Ok(currentUserBalance);
         }
