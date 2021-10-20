@@ -8,6 +8,7 @@
     ".NETCoreApp,Version=v5.0": {
       "Persistence/1.0.0": {
         "dependencies": {
+          "Contracts": "1.0.0",
           "Dapper": "2.0.90",
           "Microsoft.Extensions.Configuration": "5.0.0",
           "Microsoft.Extensions.DependencyInjection": "5.0.2",
@@ -274,6 +275,11 @@
             "fileVersion": "4.700.19.56404"
           }
         }
+      },
+      "Contracts/1.0.0": {
+        "runtime": {
+          "Contracts.dll": {}
+        }
       }
     }
   },
@@ -457,6 +463,11 @@
       "sha512": "sha512-CeWTdRNfRaSh0pm2gDTJFwVaXfTq6Xwv/sA887iwPTneW7oMtMlpvDIO+U60+3GWTB7Aom6oQwv5VZVUhQRdPQ==",
       "path": "system.windows.extensions/4.7.0",
       "hashPath": "system.windows.extensions.4.7.0.nupkg.sha512"
+    },
+    "Contracts/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
     }
   }
 }

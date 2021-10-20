@@ -1,4 +1,5 @@
-﻿using Contracts.ResponseModels;
+﻿using Contracts.Enums;
+using Contracts.ResponseModels;
 using Domain.Models.RequestModels;
 using Persistence.Models.WriteModels;
 using Persistence.Repositories;
@@ -13,10 +14,12 @@ namespace Domain.Services
     public class AccountService : IAccountService
     {
         private readonly IAccountRepository _accountRepository;
+        private readonly ITransactionRepository _transactionRepository;
 
-        public AccountService(IAccountRepository accountRepository)
+        public AccountService(IAccountRepository accountRepository, ITransactionRepository transactionRepository)
         {
             _accountRepository = accountRepository;
+            _transactionRepository = transactionRepository;
         }
 
         public async Task<bool> CheckAccountAsync(string accountId, Guid userId)
@@ -54,6 +57,19 @@ namespace Domain.Services
             });
 
             bool result = Convert.ToBoolean(rowsAffeted);
+
+            if (result)
+            {
+                await _transactionRepository.SaveTransactionAsync(new TransactionWriteModel
+                {
+                    TransactionId = Guid.NewGuid(),
+                    Iban = request.Iban,
+                    Type = TransactionType.TopUp,
+                    Sum = request.Sum,
+                    Timestamp = DateTime.Now,
+                    Description = $"{TransactionType.TopUp.ToString()} by {request.Sum}"
+                });
+            }
 
             return result;
         }
@@ -119,7 +135,20 @@ namespace Domain.Services
                 Balance = newSenderBalance
             });
 
-            //bool resultSend = Convert.ToBoolean(rowsAffetedSend);
+            bool resultSend = Convert.ToBoolean(rowsAffetedSend);
+
+            if (resultSend)
+            {
+                await _transactionRepository.SaveTransactionAsync(new TransactionWriteModel
+                {
+                    TransactionId = Guid.NewGuid(),
+                    Iban = request.SenderIban,
+                    Type = TransactionType.Debit,
+                    Sum = request.Sum * (-1),
+                    Timestamp = DateTime.Now,
+                    Description = $"Transfer to {request.ReceiverIban}"
+                });
+            }
 
             var currentReceiverBalance = await _accountRepository.GetAccountBalanceAsync(request.ReceiverIban);
 
@@ -132,6 +161,19 @@ namespace Domain.Services
             });
 
             bool resultReceive = Convert.ToBoolean(rowsAffetedReceive);
+
+            if (resultReceive)
+            {
+                await _transactionRepository.SaveTransactionAsync(new TransactionWriteModel
+                {
+                    TransactionId = Guid.NewGuid(),
+                    Iban = request.ReceiverIban,
+                    Type = TransactionType.Credit,
+                    Sum = request.Sum,
+                    Timestamp = DateTime.Now,
+                    Description = $"Transfer from {request.SenderIban}"
+                });
+            }
 
             return resultReceive;
         }

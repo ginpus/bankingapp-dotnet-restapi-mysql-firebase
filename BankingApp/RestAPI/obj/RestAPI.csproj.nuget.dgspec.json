@@ -164,7 +164,11 @@
         "frameworks": {
           "net5.0": {
             "targetAlias": "net5.0",
-            "projectReferences": {}
+            "projectReferences": {
+              "C:\\Users\\Administrator\\Desktop\\c#\\bankingapp-dotnet-restapi-mysql-firebase\\BankingApp\\Contracts\\Contracts.csproj": {
+                "projectPath": "C:\\Users\\Administrator\\Desktop\\c#\\bankingapp-dotnet-restapi-mysql-firebase\\BankingApp\\Contracts\\Contracts.csproj"
+              }
+            }
           }
         },
         "warningProperties": {
