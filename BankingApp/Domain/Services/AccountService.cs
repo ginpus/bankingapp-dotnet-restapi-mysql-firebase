@@ -36,13 +36,59 @@ namespace Domain.Services
             return rowsAffected;
         }
 
-        public async Task<bool> TopUpAccountAsync(TopUpRequestModel request)
+        public async Task<decimal> GetUserBalanceAsync(Guid userId)
+        {
+            var currentBalance = await _accountRepository.GetUserBalanceAsync(userId);
+
+            return currentBalance;
+        }
+
+        public async Task<decimal> GetIbanBalanceAsync(AccountBalanceRequestModel request)
         {
             var accountExists = await _accountRepository.CheckAccountByUserAsync(request.Iban, request.UserId);
 
             if (!accountExists)
             {
                 throw new Exception($"Account {request.Iban} not found for your user");
+            }
+
+            var currentBalance = await _accountRepository.GetAccountBalanceAsync(request.Iban);
+
+            return currentBalance;
+        }
+
+        public async Task<string> RandomIbanGenerator()
+        {
+            var startWith = "LT";
+            var generator = new Random();
+            var firstIbanPart = generator.Next(0, 999999999).ToString("D9");
+            var secondIbanPart = generator.Next(0, 999999999).ToString("D9");
+            return startWith + firstIbanPart + secondIbanPart;
+        }
+
+        public async Task<IEnumerable<TransactionResponse>> GetAllUserTransactionsAsync(Guid userId)
+        {
+            var transactions = (await _transactionRepository.GetTransactionsAsync(userId))
+                .Select(transaction => new TransactionResponse
+                {
+                    TransactionId = transaction.TransactionId,
+                    Iban = transaction.Iban,
+                    Type = transaction.Type,
+                    Sum = transaction.Sum,
+                    Description = transaction.Description,
+                    Timestamp = transaction.Timestamp
+                });
+
+            return transactions;
+        }
+
+        public async Task<bool> TopUpAccountAsync(TopUpRequestModel request)
+        {
+            var accountExists = await _accountRepository.CheckAccountByUserAsync(request.Iban, request.UserId);
+
+            if (!accountExists)
+            {
+                throw new Exception($"Account `{request.Iban}` not found for your user");
             }
 
             var currentBalance = await _accountRepository.GetAccountBalanceAsync(request.Iban);
@@ -67,41 +113,11 @@ namespace Domain.Services
                     Type = TransactionType.TopUp,
                     Sum = request.Sum,
                     Timestamp = DateTime.Now,
-                    Description = $"{TransactionType.TopUp.ToString()} by {request.Sum}"
+                    Description = $"{TransactionType.TopUp} by {request.Sum}"
                 });
             }
 
             return result;
-        }
-
-        public async Task<decimal> GetIbanBalanceAsync(AccountBalanceRequestModel request)
-        {
-            var accountExists = await _accountRepository.CheckAccountByUserAsync(request.Iban, request.UserId);
-
-            if (!accountExists)
-            {
-                throw new Exception($"Account {request.Iban} not found for your user");
-            }
-
-            var currentBalance = await _accountRepository.GetAccountBalanceAsync(request.Iban);
-
-            return currentBalance;
-        }
-
-        public async Task<decimal> GetUserBalanceAsync(Guid userId)
-        {
-            var currentBalance = await _accountRepository.GetUserBalanceAsync(userId);
-
-            return currentBalance;
-        }
-
-        public async Task<string> RandomIbanGenerator()
-        {
-            var startWith = "LT";
-            var generator = new Random();
-            var firstIbanPart = generator.Next(0, 999999999).ToString("D9");
-            var secondIbanPart = generator.Next(0, 999999999).ToString("D9");
-            return startWith + firstIbanPart + secondIbanPart;
         }
 
         public async Task<bool> SendMoneyAsync(SendMoneyRequestModel request)
@@ -176,22 +192,6 @@ namespace Domain.Services
             }
 
             return resultReceive;
-        }
-
-        public async Task<IEnumerable<TransactionResponse>> GetAllUserTransactionsAsync(Guid userId)
-        {
-            var transactions = (await _transactionRepository.GetTransactionsAsync(userId))
-                .Select(transaction => new TransactionResponse
-                {
-                    TransactionId = transaction.TransactionId,
-                    Iban = transaction.Iban,
-                    Type = transaction.Type,
-                    Sum = transaction.Sum,
-                    Description = transaction.Description,
-                    Timestamp = transaction.Timestamp
-                });
-
-            return transactions;
         }
     }
 }

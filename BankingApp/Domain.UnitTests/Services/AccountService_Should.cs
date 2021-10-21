@@ -1,5 +1,6 @@
 ﻿using AutoFixture.Xunit2;
 using Contracts.ResponseModels;
+using Domain.Models.RequestModels;
 using Domain.Services;
 using FluentAssertions;
 using Moq;
@@ -47,7 +48,6 @@ namespace Domain.UnitTests.Services
             [Frozen] Mock<IAccountRepository> accountRepositoryMock,
             AccountService sut)
         {
-
             //Act
             await sut.InsertAccountAsync(newAccount);
 
@@ -57,6 +57,71 @@ namespace Domain.UnitTests.Services
                 SaveOrUpdateAsync(It.Is<AccountWriteModel>(model => model.UserId == newAccount.UserId &&
                 model.Iban == newAccount.Iban &&
                 model.Balance == newAccount.Balance)), Times.Once);
+        }
+
+        [Theory, AutoMoqData]
+        public async Task GetUserBalanceAsync_Return_CurrentBalance(
+            Guid userId,
+            [Frozen] Mock<IAccountRepository> accountRepositoryMock,
+            AccountService sut)
+        {
+            //Act
+            await sut.GetUserBalanceAsync(userId);
+
+            //Assert
+            accountRepositoryMock
+                .Verify(mock => mock.
+                GetUserBalanceAsync(It.Is<Guid>(model => model.Equals(userId))), Times.Once);
+        }
+
+        [Theory, AutoMoqData]
+        public async Task GetIbanBalanceAsync_WithAccountBalanceRequestModel_ReturnException_WhenAccountNotExist(
+            AccountBalanceRequestModel request,
+            [Frozen] Mock<IAccountRepository> accountRepositoryMock,
+            AccountService sut)
+        {
+            //Arange
+            accountRepositoryMock
+                .Setup(mock => mock.CheckAccountByUserAsync(It.IsAny<string>(), It.IsAny<Guid>()))
+                .ReturnsAsync(false);
+
+            //Act & Assert
+            var result = await sut
+                .Invoking(sut => sut.GetIbanBalanceAsync(request))
+                .Should().ThrowAsync<Exception>()
+                .WithMessage($"Account {request.Iban} not found for your user");
+
+            accountRepositoryMock.Verify(accountRepository => accountRepository.CheckAccountByUserAsync(request.Iban, request.UserId), Times.Once);
+        }
+
+        [Theory, AutoMoqData]
+        public async Task GetIbanBalanceAsync_WithAccountBalanceRequestModel_ReturnCurrentBalance(AccountBalanceRequestModel request,
+            bool accountExists,
+            decimal currentBalance,
+            [Frozen] Mock<IAccountRepository> accountRepositoryMock,
+            AccountService sut)
+        {
+            //Arange
+            accountRepositoryMock
+                .Setup(mock => mock.CheckAccountByUserAsync(It.IsAny<string>(), It.IsAny<Guid>()))
+                .ReturnsAsync(accountExists);
+
+            accountRepositoryMock
+                .Setup(mock => mock.GetAccountBalanceAsync(It.IsAny<string>()))
+                .ReturnsAsync(currentBalance);
+
+            //Act
+            var result = await sut.GetIbanBalanceAsync(request);
+
+            //Assert
+            result.Should().Be(currentBalance);
+
+            accountRepositoryMock
+                .Verify(mock => mock.CheckAccountByUserAsync(request.Iban, request.UserId), Times.Once);
+
+            accountRepositoryMock
+                .Verify(mock => mock.GetAccountBalanceAsync(request.Iban), Times.Once);
+
         }
     }
 }
