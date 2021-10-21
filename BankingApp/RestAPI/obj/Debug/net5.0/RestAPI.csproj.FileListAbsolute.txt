@@ -51,4 +51,3 @@ C:\Users\Administrator\Desktop\c#\bankingapp-dotnet-restapi-mysql-firebase\Banki
 C:\Users\Administrator\Desktop\c#\bankingapp-dotnet-restapi-mysql-firebase\BankingApp\RestAPI\obj\Debug\net5.0\ref\RestAPI.dll
 C:\Users\Administrator\Desktop\c#\bankingapp-dotnet-restapi-mysql-firebase\BankingApp\RestAPI\obj\Debug\net5.0\RestAPI.pdb
 C:\Users\Administrator\Desktop\c#\bankingapp-dotnet-restapi-mysql-firebase\BankingApp\RestAPI\obj\Debug\net5.0\RestAPI.genruntimeconfig.cache
-C:\Users\Administrator\Desktop\c#\bankingapp-dotnet-restapi-mysql-firebase\BankingApp\RestAPI\obj\Debug\net5.0\RestAPI.csproj.CopyComplete

@@ -26,7 +26,7 @@ namespace RestAPI.Controllers
         [HttpPost]
         [Route("signUp")]
 
-        public async Task<ActionResult<CreateUserResponse>> SignUp(SignUpRequest request)
+        public async Task<ActionResult<UserResponseModel>> SignUp(SignUpRequest request)
         {
             var newUser = await _userService.SignUpAsync(request);
 
@@ -78,6 +78,7 @@ namespace RestAPI.Controllers
             }
 
             var user = await _userService.GetUserAsync(userId.Value);
+
 
             Request.Headers.TryGetValue("Authorization", out var idToken);
 
