@@ -82,7 +82,7 @@ namespace Domain.Services
             return transactions;
         }
 
-        public async Task<bool> TopUpAccountAsync(TopUpRequestModel request)
+        public async Task<int> TopUpAccountAsync(TopUpRequestModel request)
         {
             var accountExists = await _accountRepository.CheckAccountByUserAsync(request.Iban, request.UserId);
 
@@ -102,9 +102,7 @@ namespace Domain.Services
                 Balance = newBalance
             });
 
-            bool result = Convert.ToBoolean(rowsAffeted);
-
-            if (result)
+            if (rowsAffeted > 0)
             {
                 await _transactionRepository.SaveTransactionAsync(new TransactionWriteModel
                 {
@@ -117,7 +115,7 @@ namespace Domain.Services
                 });
             }
 
-            return result;
+            return rowsAffeted;
         }
 
         public async Task<bool> SendMoneyAsync(SendMoneyRequestModel request)

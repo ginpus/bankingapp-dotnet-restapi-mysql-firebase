@@ -14,7 +14,7 @@ namespace Domain.Services
 
         Task<bool> CheckAccountAsync(string accountId, Guid userId);
 
-        Task<bool> TopUpAccountAsync(TopUpRequestModel request);
+        Task<int> TopUpAccountAsync(TopUpRequestModel request);
 
         Task<bool> SendMoneyAsync(SendMoneyRequestModel sendMoneyDetails);
 

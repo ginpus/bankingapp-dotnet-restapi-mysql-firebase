@@ -27,7 +27,7 @@ namespace RestAPI.Controllers
         [HttpPost]
         [Authorize]
         [Route("topUp")]
-        public async Task<ActionResult<bool>> TopUpAccount(TopUpRequest topUpRequest)
+        public async Task<ActionResult<int>> TopUpAccount(TopUpRequest topUpRequest)
         {
             var userId = HttpContext.User.Claims.SingleOrDefault(claim => claim.Type == "user_id");
 

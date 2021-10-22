@@ -30,7 +30,12 @@
       "ProjectGuid": "51e53fc0-df15-4cf7-b421-e3422191038b",
       "DisplayName": "Domain.UnitTests",
       "ColorIndex": 5
+    },
+    "3f6ace94-e9d3-4ca7-853c-db7ab2289c65": {
+      "ProjectGuid": "3f6ace94-e9d3-4ca7-853c-db7ab2289c65",
+      "DisplayName": "Controller.UnitTests",
+      "ColorIndex": 6
     }
   },
-  "NextColorIndex": 6
+  "NextColorIndex": 7
 }

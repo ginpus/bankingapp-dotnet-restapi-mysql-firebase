@@ -1,9 +1,11 @@
 ﻿using AutoFixture.Xunit2;
+using Contracts.Enums;
 using Contracts.ResponseModels;
 using Domain.Models.RequestModels;
 using Domain.Services;
 using FluentAssertions;
 using Moq;
+using Persistence.Models.ReadModels;
 using Persistence.Models.WriteModels;
 using Persistence.Repositories;
 using System;
@@ -19,7 +21,7 @@ namespace Domain.UnitTests.Services
     public class AccountService_Should
     {
         [Theory, AutoMoqData]
-        public async Task CheckAccountAsync_Return_Boolean(
+        public async Task CheckAccountAsync_ShouldReturnBoolean_WhenAccountExists(
             string accountId,
             Guid userId,
             [Frozen] Mock<IAccountRepository> accountRepositoryMock,
@@ -43,7 +45,7 @@ namespace Domain.UnitTests.Services
         }
 
         [Theory, AutoMoqData]
-        public async Task InsertAccountAsync_Return_RowsAffected(
+        public async Task InsertAccountAsync_ShouldReturnRowsAffected_WhenAccountIsInserted(
             AccountCreateResponse newAccount,
             [Frozen] Mock<IAccountRepository> accountRepositoryMock,
             AccountService sut)
@@ -60,7 +62,7 @@ namespace Domain.UnitTests.Services
         }
 
         [Theory, AutoMoqData]
-        public async Task GetUserBalanceAsync_Return_CurrentBalance(
+        public async Task GetUserBalanceAsync_ShouldReturnCurrentBalance_WhenUserIdProvided(
             Guid userId,
             [Frozen] Mock<IAccountRepository> accountRepositoryMock,
             AccountService sut)
@@ -75,7 +77,7 @@ namespace Domain.UnitTests.Services
         }
 
         [Theory, AutoMoqData]
-        public async Task GetIbanBalanceAsync_WithAccountBalanceRequestModel_ReturnException_WhenAccountNotExist(
+        public async Task GetIbanBalanceAsync_ShouReturnException_WhenAccountNotExist(
             AccountBalanceRequestModel request,
             [Frozen] Mock<IAccountRepository> accountRepositoryMock,
             AccountService sut)
@@ -95,7 +97,7 @@ namespace Domain.UnitTests.Services
         }
 
         [Theory, AutoMoqData]
-        public async Task GetIbanBalanceAsync_WithAccountBalanceRequestModel_ReturnCurrentBalance(AccountBalanceRequestModel request,
+        public async Task GetIbanBalanceAsync_ShouldReturnCurrentBalance_WhenAccountExists(AccountBalanceRequestModel request,
             bool accountExists,
             decimal currentBalance,
             [Frozen] Mock<IAccountRepository> accountRepositoryMock,
@@ -122,6 +124,120 @@ namespace Domain.UnitTests.Services
             accountRepositoryMock
                 .Verify(mock => mock.GetAccountBalanceAsync(request.Iban), Times.Once);
 
+        }
+
+        [Theory, AutoMoqData]
+        public async Task GetAllUserTransactionsAsync_ShouldReturnTransactions_WhenGetTransactionsAsync_IsCalledWithExistingUserId(
+            Guid userId,
+            IEnumerable<TransactionReadModel> transactions,
+            [Frozen] Mock<ITransactionRepository> transactionRepositoryMock,
+            AccountService sut)
+        {
+            //Arrange
+            transactionRepositoryMock
+                .Setup(mock => mock.GetTransactionsAsync(It.IsAny<Guid>()))
+                .ReturnsAsync(transactions);
+
+            //Act
+            var result = await sut.GetAllUserTransactionsAsync(userId);
+
+            //Assert
+            result.Should().BeEquivalentTo(transactions);
+
+            transactionRepositoryMock
+                .Verify(mock => mock.GetTransactionsAsync(userId), Times.Once);
+        }
+
+        [Theory, AutoMoqData]
+        public async Task TopUpAccountAsync_ShouldReturnAccountNotFoundException_WhenAccountDoesNotExist(
+            TopUpRequestModel request,
+            [Frozen] Mock<IAccountRepository> accountRepositoryMock,
+            AccountService sut)
+        {
+            //Arange
+            accountRepositoryMock
+                .Setup(mock => mock.CheckAccountByUserAsync(It.IsAny<string>(), It.IsAny<Guid>()))
+                .ReturnsAsync(false);
+
+            //Act & Assert
+            var result = await sut
+                .Invoking(sut => sut.TopUpAccountAsync(request))
+                .Should().ThrowAsync<Exception>()
+                .WithMessage(($"Account `{request.Iban}` not found for your user"));
+
+            accountRepositoryMock.Verify(accountRepository => accountRepository.CheckAccountByUserAsync(request.Iban, request.UserId), Times.Once);
+        }
+
+        [Theory, AutoMoqData]
+        public async Task TopUpAccountAsync_ShouldReturnRowsAffected_WhenAllChecksPass(
+            TopUpRequestModel request,
+            decimal currentBalance,
+            AccountWriteModel accountWriteModel,
+            [Frozen] Mock<IAccountRepository> accountRepositoryMock,
+            AccountService sut)
+        {
+            //Arange
+            accountRepositoryMock
+                .Setup(mock => mock.CheckAccountByUserAsync(It.IsAny<string>(), It.IsAny<Guid>()))
+                 .ReturnsAsync(true);
+
+            accountRepositoryMock
+                .Setup(mock => mock.GetAccountBalanceAsync(request.Iban))
+                .ReturnsAsync(currentBalance);
+
+            accountWriteModel.Iban = request.Iban;
+            accountWriteModel.UserId = request.UserId;
+            accountWriteModel.Balance = currentBalance + request.Sum;
+
+            accountRepositoryMock
+                .Setup(mock => mock.SaveOrUpdateAsync(accountWriteModel))
+                .ReturnsAsync(It.IsAny<int>());
+
+            //Act
+            var result = await sut.TopUpAccountAsync(request);
+
+            //Assert
+            accountRepositoryMock.Verify(accountRepository => accountRepository.GetAccountBalanceAsync(It.IsAny<string>()), Times.Once);
+
+            accountRepositoryMock.Verify(accountRepository => accountRepository.SaveOrUpdateAsync(It.IsAny<AccountWriteModel>()), Times.Once);
+        }
+
+        [Theory, AutoMoqData]
+        public async Task TopUpAccountAsync_ShouldSaveTransaction_WhenAllChecksPass(
+            TopUpRequestModel request,
+            //AccountWriteModel accountWriteModel,
+            TransactionWriteModel transactionWriteModel,
+            [Frozen] Mock<IAccountRepository> accountRepositoryMock,
+            [Frozen] Mock<ITransactionRepository> transactionRepositoryMock,
+            AccountService sut)
+        {
+            //Arange
+            accountRepositoryMock
+                .Setup(mock => mock.CheckAccountByUserAsync(request.Iban, request.UserId))
+                 .ReturnsAsync(true);
+
+            accountRepositoryMock
+                .Setup(mock => mock.SaveOrUpdateAsync(It.IsAny<AccountWriteModel>()))
+                .ReturnsAsync(1);
+
+            transactionWriteModel.Iban = request.Iban;
+            transactionWriteModel.Sum = request.Sum;
+
+            transactionRepositoryMock
+                  .Setup(mock => mock.SaveTransactionAsync(transactionWriteModel))
+                   .ReturnsAsync(It.IsAny<int>());
+
+            //Act
+            var result = await sut.TopUpAccountAsync(request);
+
+            //Assert
+            accountRepositoryMock.Verify(accountRepository => accountRepository.SaveOrUpdateAsync(It.IsAny<AccountWriteModel>()), Times.Once);
+
+            transactionRepositoryMock.Verify(transactionRepository => transactionRepository.SaveTransactionAsync(It.Is<TransactionWriteModel>(value =>
+                value.Iban.Equals(request.Iban) &&
+                value.Sum.Equals(request.Sum) &&
+                value.Type.Equals(TransactionType.TopUp) &&
+                value.Description.Equals($"{TransactionType.TopUp} by {request.Sum}"))));
         }
     }
 }
