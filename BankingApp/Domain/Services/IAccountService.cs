@@ -16,7 +16,7 @@ namespace Domain.Services
 
         Task<int> TopUpAccountAsync(TopUpRequestModel request);
 
-        Task<bool> SendMoneyAsync(SendMoneyRequestModel sendMoneyDetails);
+        Task<int> SendMoneyAsync(SendMoneyRequestModel sendMoneyDetails);
 
         Task<string> RandomIbanGenerator();
 

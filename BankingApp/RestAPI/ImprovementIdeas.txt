@@ -1,0 +1,3 @@
+﻿1. Separate methods from AccountService into additional service of TransactionService
+2. Optimize some repeating sections of a code into separate methods (e.g., in AccountService the area of CheckAccountByUserAsync)
+3. Additional checking for transaction records to be made (should have a check of actual transaction accopmlishment first)

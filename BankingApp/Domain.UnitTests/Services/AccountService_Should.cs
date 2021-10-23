@@ -205,7 +205,6 @@ namespace Domain.UnitTests.Services
         [Theory, AutoMoqData]
         public async Task TopUpAccountAsync_ShouldSaveTransaction_WhenAllChecksPass(
             TopUpRequestModel request,
-            //AccountWriteModel accountWriteModel,
             TransactionWriteModel transactionWriteModel,
             [Frozen] Mock<IAccountRepository> accountRepositoryMock,
             [Frozen] Mock<ITransactionRepository> transactionRepositoryMock,
@@ -238,6 +237,213 @@ namespace Domain.UnitTests.Services
                 value.Sum.Equals(request.Sum) &&
                 value.Type.Equals(TransactionType.TopUp) &&
                 value.Description.Equals($"{TransactionType.TopUp} by {request.Sum}"))));
+        }
+
+        [Theory, AutoMoqData]
+        public async Task SendMoneyAsync_ShouldReturnSenderAccountNotFoundException_WhenAccountDoesNotExist(
+            SendMoneyRequestModel request,
+            [Frozen] Mock<IAccountRepository> accountRepositoryMock,
+            AccountService sut)
+        {
+            //Arange
+            accountRepositoryMock
+                .Setup(mock => mock.CheckAccountByUserAsync(It.IsAny<string>(), It.IsAny<Guid>()))
+                .ReturnsAsync(false);
+
+            //Act & Assert
+            var result = await sut
+                .Invoking(sut => sut.SendMoneyAsync(request))
+                .Should().ThrowAsync<Exception>()
+                .WithMessage($"Account {request.SenderIban} not found for your user");
+
+            //Assert
+            accountRepositoryMock.Verify(accountRepository => accountRepository.CheckAccountByUserAsync(request.SenderIban, request.UserId), Times.Once);
+        }
+
+        [Theory, AutoMoqData]
+        public async Task SendMoneyAsync_ShouldReturnReceiverAccountNotFoundException_WhenAccountDoesNotExist(
+            SendMoneyRequestModel request,
+            [Frozen] Mock<IAccountRepository> accountRepositoryMock,
+            AccountService sut)
+        {
+            //Arange
+            accountRepositoryMock
+                .Setup(mock => mock.CheckAccountByUserAsync(request.SenderIban, request.UserId))
+                .ReturnsAsync(true);
+
+            accountRepositoryMock
+                .Setup(mock => mock.CheckAccountByIbanAsync(It.IsAny<string>()))
+                .ReturnsAsync(false);
+
+            //Act & Assert
+            var result = await sut
+                .Invoking(sut => sut.SendMoneyAsync(request))
+                .Should().ThrowAsync<Exception>()
+                .WithMessage($"Receiver account {request.ReceiverIban} not found");
+
+            //Assert
+            accountRepositoryMock.Verify(accountRepository => accountRepository.CheckAccountByUserAsync(It.IsAny<string>(), It.IsAny<Guid>()), Times.Once);
+
+            accountRepositoryMock.Verify(accountRepository => accountRepository.CheckAccountByIbanAsync(request.ReceiverIban), Times.Once);
+        }
+
+        [Theory, AutoMoqData]
+        public async Task SendMoneyAsync_ShouldReturnInsufficientBalanceException_WhenAccountLacksBalance(
+                SendMoneyRequestModel request,
+                decimal currentSenderBalance,
+                [Frozen] Mock<IAccountRepository> accountRepositoryMock,
+                AccountService sut)
+        {
+            //Arange
+            accountRepositoryMock
+                .Setup(mock => mock.CheckAccountByUserAsync(request.SenderIban, request.UserId))
+                .ReturnsAsync(true);
+
+            accountRepositoryMock
+                .Setup(mock => mock.CheckAccountByIbanAsync(request.ReceiverIban))
+                .ReturnsAsync(true);
+
+            accountRepositoryMock
+                .Setup(mock => mock.GetAccountBalanceAsync(It.IsAny<string>()))
+                .ReturnsAsync(currentSenderBalance);
+
+            request.Sum = currentSenderBalance + 1;
+
+            //Act & Assert
+            var result = await sut
+                .Invoking(sut => sut.SendMoneyAsync(request))
+                .Should().ThrowAsync<Exception>()
+                .WithMessage($"Insufficient balance. Desired send amount: {request.Sum}. Current balance: {currentSenderBalance}");
+
+            //Assert
+            accountRepositoryMock.Verify(accountRepository => accountRepository.CheckAccountByUserAsync(It.IsAny<string>(), It.IsAny<Guid>()), Times.Once);
+
+            accountRepositoryMock.Verify(accountRepository => accountRepository.CheckAccountByIbanAsync(It.IsAny<string>()), Times.Once);
+
+            accountRepositoryMock.Verify(accountRepository => accountRepository.GetAccountBalanceAsync(request.SenderIban), Times.Once);
+        }
+
+        [Theory, AutoMoqData]
+        public async Task SendMoneyAsync_ShouldDebitSenderAccount_WhenAccountBalanceIsSufficient(
+                SendMoneyRequestModel request,
+                decimal currentSenderBalance,
+                AccountSendWriteModel accountSendWriteModel,
+                [Frozen] Mock<IAccountRepository> accountRepositoryMock,
+                AccountService sut)
+        {
+            //Arange
+            accountRepositoryMock
+                .Setup(mock => mock.CheckAccountByUserAsync(request.SenderIban, request.UserId))
+                .ReturnsAsync(true);
+
+            accountRepositoryMock
+                .Setup(mock => mock.CheckAccountByIbanAsync(request.ReceiverIban))
+                .ReturnsAsync(true);
+
+            accountRepositoryMock
+                .Setup(mock => mock.GetAccountBalanceAsync(request.SenderIban))
+                .ReturnsAsync(currentSenderBalance);
+
+            request.Sum = currentSenderBalance - 1;
+
+            accountSendWriteModel.Iban = request.SenderIban;
+            accountSendWriteModel.Balance = 1;
+
+            accountRepositoryMock
+                .Setup(mock => mock.SaveOrUpdateAsync(accountSendWriteModel))
+                .ReturnsAsync(It.IsAny<int>());
+
+            //Act
+            var result = await sut.SendMoneyAsync(request);
+
+            //Assert
+            accountRepositoryMock.Verify(accountRepository => accountRepository.CheckAccountByUserAsync(It.IsAny<string>(), It.IsAny<Guid>()), Times.Once);
+
+            accountRepositoryMock.Verify(accountRepository => accountRepository.CheckAccountByIbanAsync(It.IsAny<string>()), Times.Once);
+
+            accountRepositoryMock.Verify(accountRepository => accountRepository.GetAccountBalanceAsync(It.IsAny<string>()), Times.Exactly(2));
+
+            accountRepositoryMock.Verify(accountRepository => accountRepository.SaveOrUpdateAsync(It.IsAny<AccountSendWriteModel>()), Times.Exactly(2));
+        }
+
+        [Theory, AutoMoqData]
+        public async Task SendMoneyAsync_ShouldRecordSendTransaction_WhenAllChecksPass(
+                SendMoneyRequestModel request,
+                decimal currentSenderBalance,
+                decimal currentReceiverBalance,
+                AccountSendWriteModel accountSendWriteModel,
+                AccountSendWriteModel accountReceiveWriteModel,
+                TransactionWriteModel transactionSendWriteModel,
+                TransactionWriteModel transactionReceiveWriteModel,
+                [Frozen] Mock<IAccountRepository> accountRepositoryMock,
+                [Frozen] Mock<ITransactionRepository> transactionRepositoryMock,
+                AccountService sut)
+        {
+            //Arange
+            accountRepositoryMock
+                .Setup(mock => mock.CheckAccountByUserAsync(request.SenderIban, request.UserId))
+                .ReturnsAsync(true);
+
+            accountRepositoryMock
+                .Setup(mock => mock.CheckAccountByIbanAsync(request.ReceiverIban))
+                .ReturnsAsync(true);
+
+            accountRepositoryMock
+                .Setup(mock => mock.GetAccountBalanceAsync(request.SenderIban))
+                .ReturnsAsync(currentSenderBalance);
+
+            request.Sum = currentSenderBalance - 1;
+
+            accountSendWriteModel.Iban = request.SenderIban;
+            accountSendWriteModel.Balance = 1;
+
+            accountRepositoryMock
+                .Setup(mock => mock.SaveOrUpdateAsync(It.IsAny<AccountWriteModel>()))
+                .ReturnsAsync(1);
+
+            transactionSendWriteModel.Iban = request.SenderIban;
+            transactionSendWriteModel.Sum = request.Sum * (-1);
+
+            transactionRepositoryMock
+                  .Setup(mock => mock.SaveTransactionAsync(transactionSendWriteModel))
+                   .ReturnsAsync(It.IsAny<int>());
+
+            accountRepositoryMock
+                .Setup(mock => mock.GetAccountBalanceAsync(request.ReceiverIban))
+                .ReturnsAsync(currentReceiverBalance);
+
+            accountReceiveWriteModel.Iban = request.ReceiverIban;
+            accountReceiveWriteModel.Balance = currentReceiverBalance + request.Sum;
+
+            accountRepositoryMock
+                .Setup(mock => mock.SaveOrUpdateAsync(It.IsAny<AccountWriteModel>()))
+                .ReturnsAsync(1);
+
+            transactionReceiveWriteModel.Iban = accountReceiveWriteModel.Iban;
+
+            transactionRepositoryMock
+                  .Setup(mock => mock.SaveTransactionAsync(transactionReceiveWriteModel))
+                   .ReturnsAsync(It.IsAny<int>());
+
+            //Act
+            var result = await sut.SendMoneyAsync(request);
+
+            //Assert
+            accountRepositoryMock.Verify(accountRepository => accountRepository.CheckAccountByUserAsync(It.IsAny<string>(), It.IsAny<Guid>()), Times.Once);
+
+            accountRepositoryMock.Verify(accountRepository => accountRepository.CheckAccountByIbanAsync(It.IsAny<string>()), Times.Once);
+
+            accountRepositoryMock.Verify(accountRepository => accountRepository.GetAccountBalanceAsync(It.IsAny<string>()), Times.Exactly(2));
+
+            accountRepositoryMock.Verify(accountRepository => accountRepository.SaveOrUpdateAsync(It.IsAny<AccountSendWriteModel>()), Times.Exactly(2));
+
+            transactionRepositoryMock.Verify(transactionRepository => transactionRepository.SaveTransactionAsync(It.Is<TransactionWriteModel>(value =>
+                    value.Iban.Equals(request.SenderIban) &&
+                    value.Sum.Equals(request.Sum * (-1)))));
+
+            transactionRepositoryMock.Verify(transactionRepository => transactionRepository.SaveTransactionAsync(It.Is<TransactionWriteModel>(value =>
+                value.Iban.Equals(request.ReceiverIban))));
+
         }
     }
 }

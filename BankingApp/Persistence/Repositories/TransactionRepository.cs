@@ -38,7 +38,7 @@ namespace Persistence.Repositories
 
         public async Task<IEnumerable<TransactionReadModel>> GetTransactionsAsync(Guid userId)
         {
-            var sql = @$"SELECT {TransactionTable}.transactionid, {TransactionTable}.iban, {TransactionTable}.type, {TransactionTable}.sum, {TransactionTable}.timestamp, {TransactionTable}.description FROM {TransactionTable} JOIN {AccountTable} ON {TransactionTable}.iban = {AccountTable}.iban WHERE {AccountTable}.userid = @userid";
+            var sql = @$"SELECT {TransactionTable}.transactionid, {TransactionTable}.iban, {TransactionTable}.type, {TransactionTable}.sum, {TransactionTable}.timestamp, {TransactionTable}.description FROM {TransactionTable} JOIN {AccountTable} ON {TransactionTable}.iban = {AccountTable}.iban WHERE {AccountTable}.userid = @userid ORDER BY {TransactionTable}.timestamp desc";
 
             var result = await _sqlClient.QueryAsync<TransactionReadModel>(sql, new
             {

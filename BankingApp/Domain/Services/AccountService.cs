@@ -118,7 +118,7 @@ namespace Domain.Services
             return rowsAffeted;
         }
 
-        public async Task<bool> SendMoneyAsync(SendMoneyRequestModel request)
+        public async Task<int> SendMoneyAsync(SendMoneyRequestModel request)
         {
             var senderAccountExists = await _accountRepository.CheckAccountByUserAsync(request.SenderIban, request.UserId);
 
@@ -149,20 +149,18 @@ namespace Domain.Services
                 Balance = newSenderBalance
             });
 
-            bool resultSend = Convert.ToBoolean(rowsAffetedSend);
-
-            if (resultSend)
+            /*            if (rowsAffetedSend > 0)
+                        {*/
+            await _transactionRepository.SaveTransactionAsync(new TransactionWriteModel
             {
-                await _transactionRepository.SaveTransactionAsync(new TransactionWriteModel
-                {
-                    TransactionId = Guid.NewGuid(),
-                    Iban = request.SenderIban,
-                    Type = TransactionType.Debit,
-                    Sum = request.Sum * (-1),
-                    Timestamp = DateTime.Now,
-                    Description = $"Transfer to {request.ReceiverIban}"
-                });
-            }
+                TransactionId = Guid.NewGuid(),
+                Iban = request.SenderIban,
+                Type = TransactionType.Debit,
+                Sum = request.Sum * (-1),
+                Timestamp = DateTime.Now,
+                Description = $"Transfer to {request.ReceiverIban}"
+            });
+            //}
 
             var currentReceiverBalance = await _accountRepository.GetAccountBalanceAsync(request.ReceiverIban);
 
@@ -174,22 +172,20 @@ namespace Domain.Services
                 Balance = newReceiverBalance
             });
 
-            bool resultReceive = Convert.ToBoolean(rowsAffetedReceive);
-
-            if (resultReceive)
+            /*            if (rowsAffetedReceive > 0)
+                        {*/
+            await _transactionRepository.SaveTransactionAsync(new TransactionWriteModel
             {
-                await _transactionRepository.SaveTransactionAsync(new TransactionWriteModel
-                {
-                    TransactionId = Guid.NewGuid(),
-                    Iban = request.ReceiverIban,
-                    Type = TransactionType.Credit,
-                    Sum = request.Sum,
-                    Timestamp = DateTime.Now,
-                    Description = $"Transfer from {request.SenderIban}"
-                });
-            }
+                TransactionId = Guid.NewGuid(),
+                Iban = request.ReceiverIban,
+                Type = TransactionType.Credit,
+                Sum = request.Sum,
+                Timestamp = DateTime.Now,
+                Description = $"Transfer from {request.SenderIban}"
+            });
+            //}
 
-            return resultReceive;
+            return rowsAffetedReceive;
         }
     }
 }
