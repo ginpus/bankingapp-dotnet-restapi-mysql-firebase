@@ -16,13 +16,16 @@ namespace RestAPI.Controllers
     {
         private readonly IAccountService _accountService;
         private readonly IUserService _userService;
+        private readonly IUserResolverService _userResolverService;
 
         public AccountController(
             IAccountService accountService,
-            IUserService userService)
+            IUserService userService,
+            IUserResolverService userResolverService)
         {
             _accountService = accountService;
             _userService = userService;
+            _userResolverService = userResolverService;
         }
 
         [HttpPost]
@@ -30,14 +33,18 @@ namespace RestAPI.Controllers
         [Route("newAccount")]
         public async Task<ActionResult<AccountCreateResponse>> CreateAccount()
         {
-            var userId = HttpContext.User.Claims.SingleOrDefault(claim => claim.Type == "user_id");
+            var userId1 = HttpContext.User.Claims.SingleOrDefault(claim => claim.Type == "user_id");
 
-            if (userId is null)
+            var userId2 = _userResolverService.User?.Claims?.SingleOrDefault(claim => claim.Type == "user_id");
+
+            if (userId1 is null)
             {
                 return NotFound();
             }
 
-            var user = await _userService.GetUserAsync(userId.Value);
+            //var userId = _userResolverService.User?.Claims?.Name;
+
+            var user = await _userService.GetUserAsync(userId1.Value);
 
             var newIban = await _accountService.RandomIbanGenerator();
 

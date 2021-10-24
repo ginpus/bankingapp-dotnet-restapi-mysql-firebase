@@ -1,6 +1,8 @@
 ﻿using Domain.Client;
 using Domain.Services;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Domain
 {
@@ -22,9 +24,12 @@ namespace Domain
 
         private static IServiceCollection AddServices(this IServiceCollection services)
         {
+            services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>(); // IHttpContextAccessor is not wired up by default. Required for UserResolverService
+
             services
                 .AddSingleton<IUserService, UserService>()
-                .AddSingleton<IAccountService, AccountService>();
+                .AddSingleton<IAccountService, AccountService>()
+                .AddTransient<IUserResolverService, UserResolverService>();
 
             return services;
         }
