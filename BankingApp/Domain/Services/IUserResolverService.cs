@@ -10,5 +10,7 @@ namespace Domain.Services
     public interface IUserResolverService
     {
         ClaimsPrincipal User { get; }
+
+        string UserId { get; }
     }
 }

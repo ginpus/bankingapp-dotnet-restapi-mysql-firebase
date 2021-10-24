@@ -33,18 +33,14 @@ namespace RestAPI.Controllers
         [Route("newAccount")]
         public async Task<ActionResult<AccountCreateResponse>> CreateAccount()
         {
-            var userId1 = HttpContext.User.Claims.SingleOrDefault(claim => claim.Type == "user_id");
+            var userId = _userResolverService.UserId;
 
-            var userId2 = _userResolverService.User?.Claims?.SingleOrDefault(claim => claim.Type == "user_id");
-
-            if (userId1 is null)
+            if (userId is null)
             {
                 return NotFound();
             }
 
-            //var userId = _userResolverService.User?.Claims?.Name;
-
-            var user = await _userService.GetUserAsync(userId1.Value);
+            var user = await _userService.GetUserAsync(userId);
 
             var newIban = await _accountService.RandomIbanGenerator();
 
@@ -65,14 +61,14 @@ namespace RestAPI.Controllers
         [Route("balance/single")]
         public async Task<ActionResult<decimal>> GetSingleIbanBalance(SingleIbanBalanceRequest request)
         {
-            var userId = HttpContext.User.Claims.SingleOrDefault(claim => claim.Type == "user_id");
+            var userId = _userResolverService.UserId;
 
             if (userId is null)
             {
                 return NotFound();
             }
 
-            var user = await _userService.GetUserAsync(userId.Value);
+            var user = await _userService.GetUserAsync(userId);
 
             var currentBalance = await _accountService.GetIbanBalanceAsync(new AccountBalanceRequestModel
             {
@@ -89,14 +85,14 @@ namespace RestAPI.Controllers
 
         public async Task<ActionResult<decimal>> GetTotalBalance()
         {
-            var userId = HttpContext.User.Claims.SingleOrDefault(claim => claim.Type == "user_id");
+            var userId = _userResolverService.UserId;
 
             if (userId is null)
             {
                 return NotFound();
             }
 
-            var user = await _userService.GetUserAsync(userId.Value);
+            var user = await _userService.GetUserAsync(userId);
 
             var currentUserBalance = await _accountService.GetUserBalanceAsync(user.UserId);
 
@@ -110,14 +106,14 @@ namespace RestAPI.Controllers
 
         public async Task<ActionResult<TransactionResponse>> GetAllTransactions()
         {
-            var userId = HttpContext.User.Claims.SingleOrDefault(claim => claim.Type == "user_id");
+            var userId = _userResolverService.UserId;
 
             if (userId is null)
             {
                 return NotFound();
             }
 
-            var user = await _userService.GetUserAsync(userId.Value);
+            var user = await _userService.GetUserAsync(userId);
 
             var transactions = await _accountService.GetAllUserTransactionsAsync(user.UserId);
 

@@ -21,19 +21,13 @@ namespace Controller.UnitTests.Controllers
     public class AuthController_Should
     {
         private readonly Mock<IUserService> _userServiceMock = new Mock<IUserService>();
-        private readonly Mock<HttpContext> _httpContextMock = new Mock<HttpContext>();
+        private readonly Mock<IUserResolverService> _userResolverServiceMock = new Mock<IUserResolverService>();
 
         private readonly AuthController _sut;
 
         public AuthController_Should()
         {
-            _sut = new AuthController(_userServiceMock.Object)
-            {
-                ControllerContext =
-                {
-                    HttpContext = _httpContextMock.Object
-                }
-            };
+            _sut = new AuthController(_userServiceMock.Object, _userResolverServiceMock.Object);
         }
 
         [Theory, AutoData]
@@ -74,17 +68,6 @@ namespace Controller.UnitTests.Controllers
                 .Which.Value.Should().BeEquivalentTo(userResponse);
 
             _userServiceMock.Verify(mock => mock.SignInUserAsync(It.IsAny<SignInRequest>()), Times.Once);
-        }
-
-        private Guid SetupHttpContext()
-        {
-            var userId = Guid.NewGuid();
-
-            _httpContextMock
-                .SetupGet(mock => mock.Items["userId"])
-                .Returns(userId);
-
-            return userId;
         }
     }
 }

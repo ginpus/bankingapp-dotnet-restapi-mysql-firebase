@@ -17,5 +17,7 @@ namespace Domain.Services
         }
 
         public ClaimsPrincipal User => _context.HttpContext?.User;
+
+        public string UserId => _context.HttpContext?.User?.Claims?.SingleOrDefault(claim => claim.Type == "user_id").Value;
     }
 }

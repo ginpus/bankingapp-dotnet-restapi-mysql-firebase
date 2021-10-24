@@ -22,74 +22,67 @@ namespace Controller.UnitTests.Controllers
     {
         private readonly Mock<IUserService> _userServiceMock = new Mock<IUserService>();
         private readonly Mock<IAccountService> _accountService = new Mock<IAccountService>();
-        private readonly Mock<HttpContext> _httpContextMock = new Mock<HttpContext>();
+        private readonly Mock<IUserResolverService> _userResolverServiceMock = new Mock<IUserResolverService>();
 
         private readonly AccountController _sut;
 
         public AccountController_Should()
         {
-            _sut = new AccountController(_accountService.Object, _userServiceMock.Object)
-            {
-                ControllerContext =
-                {
-                    HttpContext = _httpContextMock.Object
-                }
-            };
+            _sut = new AccountController(_accountService.Object, _userServiceMock.Object, _userResolverServiceMock.Object);
         }
 
-        /*       [Theory, AutoData]
-               public async Task CreateNewAccount_When_CreateAccount_All_Checks_Pass(
-                   SignUpRequest request,
-                   UserResponseModel userResponse)
-               {
-                   // Arrange
-                   var userId = SetupHttpContext();
-
-                   _userServiceMock
-                       .Setup(mock => mock.SignUpAsync(request))
-                       .ReturnsAsync(userResponse);
-
-                   // Act
-                   var result = await _sut.SignUp(request);
-
-                   // Assert
-                   result.Result.Should().BeOfType<OkObjectResult>()
-                       .Which.Value.Should().BeEquivalentTo(userResponse);
-
-                   _userServiceMock.Verify(mock => mock.SignUpAsync(It.IsAny<SignUpRequest>()), Times.Once);
-               }*/
-
-        /*[Theory, AutoData]
-        public async Task CreateNewAccount_Returns_NotFound_When_UserId_Is_Null(
-            SignInRequest request,
-            SignInResponse userResponse)
+        [Theory, AutoData]
+        public async Task CreateNewAccount_ShouldReturnNotFoundException_WhenUserIdIsNull()
         {
             // Arrange
-            var userId = SetupHttpContext();
-
-            _userServiceMock
-                .Setup(mock => mock.SignInUserAsync(request))
-                .ReturnsAsync(userResponse);
+            _userResolverServiceMock
+                .Setup(mock => mock.UserId).Returns(() => null);
 
             // Act
-            var result = await _sut.SignIn(request);
+            var result = await _sut.CreateAccount();
+
+            // Assert
+            result.Result.Should().BeOfType<NotFoundResult>();
+        }
+
+        [Theory, AutoData]
+        public async Task CreateNewAccount_ShouldCreateNewAccount_WhenUserIdIsNotNull(
+            string newIban,
+            UserResponseModel user,
+            AccountCreateResponse accountCreateResponse)
+        {
+            // Arrange
+            _userResolverServiceMock
+                .Setup(mock => mock.UserId).Returns(user.LocalId);
+
+            _userServiceMock
+                .Setup(mock => mock.GetUserAsync(user.LocalId))
+                .ReturnsAsync(user);
+
+            _accountService
+                .Setup(mock => mock.RandomIbanGenerator())
+                .ReturnsAsync(newIban);
+
+            accountCreateResponse.Iban = newIban;
+            accountCreateResponse.UserId = user.UserId;
+            accountCreateResponse.Balance = 0;
+
+            _accountService
+                .Setup(mock => mock.InsertAccountAsync(accountCreateResponse))
+                .ReturnsAsync(1);
+
+            // Act
+            var result = await _sut.CreateAccount();
 
             // Assert
             result.Result.Should().BeOfType<OkObjectResult>()
-                .Which.Value.Should().BeEquivalentTo(userResponse);
+                .Which.Value.Should().BeEquivalentTo(accountCreateResponse);
 
-            _userServiceMock.Verify(mock => mock.SignInUserAsync(It.IsAny<SignInRequest>()), Times.Once);
-        }*/
+            _userServiceMock.Verify(mock => mock.GetUserAsync(It.IsAny<string>()), Times.Once);
 
-        private Guid SetupHttpContext()
-        {
-            var userId = Guid.NewGuid();
+            _accountService.Verify(mock => mock.RandomIbanGenerator(), Times.Once);
 
-            _httpContextMock
-                .SetupGet(mock => mock.Items["userId"])
-                .Returns(userId);
-
-            return userId;
+            _accountService.Verify(mock => mock.InsertAccountAsync(It.IsAny<AccountCreateResponse>()), Times.Once);
         }
     }
 }

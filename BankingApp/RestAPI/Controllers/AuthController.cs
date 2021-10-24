@@ -17,10 +17,12 @@ namespace RestAPI.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IUserService _userService;
+        private readonly IUserResolverService _userResolverService;
 
-        public AuthController(IUserService userService)
+        public AuthController(IUserService userService, IUserResolverService userResolverService)
         {
             _userService = userService;
+            _userResolverService = userResolverService;
         }
 
         [HttpPost]
@@ -70,14 +72,14 @@ namespace RestAPI.Controllers
 
         public async Task<ActionResult<EditUserResponse>> ChangeEmail(ChangeEmailRequest request)
         {
-            var userId = HttpContext.User.Claims.SingleOrDefault(claim => claim.Type == "user_id");
+            var userId = _userResolverService.UserId;
 
             if (userId is null)
             {
                 return NotFound();
             }
 
-            var user = await _userService.GetUserAsync(userId.Value);
+            var user = await _userService.GetUserAsync(userId);
 
 
             Request.Headers.TryGetValue("Authorization", out var idToken);
