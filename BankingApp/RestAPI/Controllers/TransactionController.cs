@@ -4,6 +4,7 @@ using Domain.Models.RequestModels;
 using Domain.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -32,14 +33,14 @@ namespace RestAPI.Controllers
         [Route("topUp")]
         public async Task<ActionResult<int>> TopUpAccount(TopUpRequest topUpRequest)
         {
-            var userId = HttpContext.User.Claims.SingleOrDefault(claim => claim.Type == "user_id");
+            var userId = _userResolverService.UserId;
 
             if (userId is null)
             {
                 return NotFound();
             }
 
-            var user = await _userService.GetUserAsync(userId.Value);
+            var user = await _userService.GetUserAsync(userId);
 
             var topUpDetails = new TopUpRequestModel
             {
@@ -56,16 +57,16 @@ namespace RestAPI.Controllers
         [HttpPost]
         [Authorize]
         [Route("send")]
-        public async Task<ActionResult<bool>> SendMoney(SendMoneyRequest sendMoneyRequest)
+        public async Task<ActionResult<int>> SendMoney(SendMoneyRequest sendMoneyRequest)
         {
-            var userId = HttpContext.User.Claims.SingleOrDefault(claim => claim.Type == "user_id");
+            var userId = _userResolverService.UserId;
 
             if (userId is null)
             {
                 return NotFound();
             }
 
-            var user = await _userService.GetUserAsync(userId.Value);
+            var user = await _userService.GetUserAsync(userId);
 
             var sendMoneyDetails = new SendMoneyRequestModel
             {
@@ -84,7 +85,7 @@ namespace RestAPI.Controllers
         [Authorize]
         [Route("history")]
 
-        public async Task<ActionResult<TransactionResponse>> GetAllTransactions()
+        public async Task<ActionResult<IEnumerable<TransactionResponse>>> GetAllTransactions()
         {
             var userId = _userResolverService.UserId;
 

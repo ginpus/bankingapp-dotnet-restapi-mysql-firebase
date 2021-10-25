@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Primitives;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
@@ -12,5 +14,9 @@ namespace Domain.Services
         ClaimsPrincipal User { get; }
 
         string UserId { get; }
+
+        IHeaderDictionary HeaderDictionary { get; }
+
+        string IdToken { get; }
     }
 }

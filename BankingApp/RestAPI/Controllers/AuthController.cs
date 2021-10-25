@@ -50,11 +50,7 @@ namespace RestAPI.Controllers
 
         public async Task<ActionResult<EditUserResponse>> ChangePassword(ChangePasswordRequest request)
         {
-            Request.Headers.TryGetValue("Authorization", out var idToken);
-
-            //var idToken = this.GetHeaderData("Authorization");
-
-            var idTokenValue = idToken.First().Remove(0, 7); // removes 'Bearer ' from the header
+            var idTokenValue = _userResolverService.IdToken.Remove(0, 7);
 
             var response = await _userService.ChangePasswordAsync(new ChangePasswordRequestModel
             {
@@ -81,10 +77,7 @@ namespace RestAPI.Controllers
 
             var user = await _userService.GetUserAsync(userId);
 
-
-            Request.Headers.TryGetValue("Authorization", out var idToken);
-
-            var idTokenValue = idToken.ToString().Remove(0, 7); // removes 'Bearer ' from the header
+            var idTokenValue = _userResolverService.IdToken.Remove(0, 7);
 
             var response = await _userService.ChangeEmailAsync(user.UserId, new ChangeEmailRequestModel
             {
@@ -95,31 +88,5 @@ namespace RestAPI.Controllers
 
             return Ok(response);
         }
-
-        /*        [HttpGet("GetHeaderData")]
-                public ActionResult<string> GetHeaderData(string headerKey)
-                {
-                    Request.Headers.TryGetValue(headerKey, out var headerValue);
-                    return Ok(headerValue);
-                }
-        //----------------------------------get User ID value----------------------------------
-                     var userId = HttpContext.User.Claims.SingleOrDefault(claim => claim.Type == "user_id");
-
-            if (userId is null)
-            {
-                return NotFound();
-            }
-
-            var user = await _userService.GetUserAsync(userId.Value);
-        
-        //----------------------------------get User email value from request----------------------------------
-        
-            var firebaseIdentity = HttpContext.User.Claims.FirstOrDefault(claim => claim.Type == "firebase").Value;
-
-            FirebaseIdentity firebaseIdentityJson = (FirebaseIdentity)JsonSerializer.Deserialize(firebaseIdentity, typeof(FirebaseIdentity));
-
-            var userEmail = firebaseIdentityJson.Identities.Email.First();
-         
-         */
     }
 }
