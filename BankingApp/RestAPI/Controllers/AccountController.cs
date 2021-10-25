@@ -56,10 +56,10 @@ namespace RestAPI.Controllers
             return Ok(newAccount);
         }
 
-        [HttpPost]
+        [HttpGet]
         [Authorize]
-        [Route("balance/single")]
-        public async Task<ActionResult<decimal>> GetSingleIbanBalance(SingleIbanBalanceRequest request)
+        [Route("balance/{iban}")]
+        public async Task<ActionResult<decimal>> GetSingleIbanBalance(string iban)
         {
             var userId = _userResolverService.UserId;
 
@@ -72,7 +72,7 @@ namespace RestAPI.Controllers
 
             var currentBalance = await _accountService.GetIbanBalanceAsync(new AccountBalanceRequestModel
             {
-                Iban = request.Iban,
+                Iban = iban,
                 UserId = user.UserId
             });
 
@@ -97,27 +97,6 @@ namespace RestAPI.Controllers
             var currentUserBalance = await _accountService.GetUserBalanceAsync(user.UserId);
 
             return Ok(currentUserBalance);
-        }
-
-
-        [HttpGet]
-        [Authorize]
-        [Route("transactionHistory")]
-
-        public async Task<ActionResult<TransactionResponse>> GetAllTransactions()
-        {
-            var userId = _userResolverService.UserId;
-
-            if (userId is null)
-            {
-                return NotFound();
-            }
-
-            var user = await _userService.GetUserAsync(userId);
-
-            var transactions = await _accountService.GetAllUserTransactionsAsync(user.UserId);
-
-            return Ok(transactions);
         }
     }
 }

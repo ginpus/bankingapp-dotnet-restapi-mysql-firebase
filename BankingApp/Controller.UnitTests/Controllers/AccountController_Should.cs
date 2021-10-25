@@ -2,6 +2,7 @@
 using Contracts.RequestModels;
 using Contracts.ResponseModels;
 using Domain.Client.Models.ResponseModels;
+using Domain.Models.RequestModels;
 using Domain.Models.ResponseModels;
 using Domain.Services;
 using FluentAssertions;
@@ -83,6 +84,94 @@ namespace Controller.UnitTests.Controllers
             _accountService.Verify(mock => mock.RandomIbanGenerator(), Times.Once);
 
             _accountService.Verify(mock => mock.InsertAccountAsync(It.IsAny<AccountCreateResponse>()), Times.Once);
+        }
+
+        [Theory, AutoData]
+        public async Task GetSingleIbanBalance_ShouldReturnNotFoundException_WhenUserIdIsNull(
+            string iban)
+        {
+            // Arrange
+            _userResolverServiceMock
+                .Setup(mock => mock.UserId).Returns(() => null);
+
+            // Act
+            var result = await _sut.GetSingleIbanBalance(iban);
+
+            // Assert
+            result.Result.Should().BeOfType<NotFoundResult>();
+        }
+
+        [Theory, AutoData]
+        public async Task GetSingleIbanBalance_ShouldReturnBalance_WhenUserIdIsNotNull(
+            string iban,
+            UserResponseModel user,
+            AccountBalanceRequestModel account)
+        {
+            // Arrange
+            _userResolverServiceMock
+                .Setup(mock => mock.UserId).Returns(user.LocalId);
+
+            _userServiceMock
+                .Setup(mock => mock.GetUserAsync(user.LocalId))
+                .ReturnsAsync(user);
+
+            account.Iban = iban;
+            account.UserId = user.UserId;
+
+            _accountService
+                .Setup(mock => mock.GetIbanBalanceAsync(account))
+                .ReturnsAsync(It.IsAny<decimal>());
+
+            // Act
+            var result = await _sut.GetSingleIbanBalance(iban);
+
+            // Assert
+            result.Result.Should().BeOfType<OkObjectResult>();
+
+            _userServiceMock.Verify(mock => mock.GetUserAsync(It.IsAny<string>()), Times.Once);
+
+            _accountService.Verify(mock => mock.GetIbanBalanceAsync(It.IsAny<AccountBalanceRequestModel>()), Times.Once);
+        }
+
+        [Theory, AutoData]
+        public async Task GetTotalBalance_ShouldReturnNotFoundException_WhenUserIdIsNull()
+        {
+            // Arrange
+            _userResolverServiceMock
+                .Setup(mock => mock.UserId).Returns(() => null);
+
+            // Act
+            var result = await _sut.GetTotalBalance();
+
+            // Assert
+            result.Result.Should().BeOfType<NotFoundResult>();
+        }
+
+        [Theory, AutoData]
+        public async Task GetTotalBalance_ShouldReturnBalance_WhenUserIdIsNotNull(
+            UserResponseModel user)
+        {
+            // Arrange
+            _userResolverServiceMock
+                .Setup(mock => mock.UserId).Returns(user.LocalId);
+
+            _userServiceMock
+                .Setup(mock => mock.GetUserAsync(user.LocalId))
+                .ReturnsAsync(user);
+
+            _accountService
+                .Setup(mock => mock.GetUserBalanceAsync(user.UserId))
+                .ReturnsAsync(It.IsAny<decimal>());
+
+            // Act
+            var result = await _sut.GetTotalBalance();
+
+            // Assert
+            result.Result.Should().BeOfType<OkObjectResult>();
+
+            _userServiceMock.Verify(mock => mock.GetUserAsync(It.IsAny<string>()), Times.Once);
+
+            _accountService.Verify(mock => mock.GetUserBalanceAsync(It.IsAny<Guid>()), Times.Once);
         }
     }
 }

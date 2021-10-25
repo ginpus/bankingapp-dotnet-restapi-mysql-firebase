@@ -15,13 +15,16 @@ namespace RestAPI.Controllers
     {
         private readonly IAccountService _accountService;
         private readonly IUserService _userService;
+        private readonly IUserResolverService _userResolverService;
 
         public TransactionController(
             IAccountService accountService,
-            IUserService userService)
+            IUserService userService,
+            IUserResolverService userResolverService)
         {
             _accountService = accountService;
             _userService = userService;
+            _userResolverService = userResolverService;
         }
 
         [HttpPost]
@@ -75,6 +78,26 @@ namespace RestAPI.Controllers
             var result = await _accountService.SendMoneyAsync(sendMoneyDetails);
 
             return Ok(result);
+        }
+
+        [HttpGet]
+        [Authorize]
+        [Route("history")]
+
+        public async Task<ActionResult<TransactionResponse>> GetAllTransactions()
+        {
+            var userId = _userResolverService.UserId;
+
+            if (userId is null)
+            {
+                return NotFound();
+            }
+
+            var user = await _userService.GetUserAsync(userId);
+
+            var transactions = await _accountService.GetAllUserTransactionsAsync(user.UserId);
+
+            return Ok(transactions);
         }
     }
 }
