@@ -2,6 +2,7 @@
 using Contracts.RequestModels;
 using Contracts.ResponseModels;
 using Domain.Client.Models.ResponseModels;
+using Domain.Models.RequestModels;
 using Domain.Models.ResponseModels;
 using Domain.Services;
 using FluentAssertions;
@@ -31,7 +32,7 @@ namespace Controller.UnitTests.Controllers
         }
 
         [Theory, AutoData]
-        public async Task ReturnUserReadModel_When_SignUp_Is_Called(
+        public async Task SignUp_ReturnsUserReadModel_WhenAllChecksPass(
             SignUpRequest request,
             UserResponseModel userResponse)
         {
@@ -51,7 +52,7 @@ namespace Controller.UnitTests.Controllers
         }
 
         [Theory, AutoData]
-        public async Task ReturnSignInResponse_When_SignIn_Is_Called(
+        public async Task SignIn_ReturnSignInResponse_WhenAllChecksPass(
             SignInRequest request,
             SignInResponse userResponse)
         {
@@ -68,6 +69,88 @@ namespace Controller.UnitTests.Controllers
                 .Which.Value.Should().BeEquivalentTo(userResponse);
 
             _userServiceMock.Verify(mock => mock.SignInUserAsync(It.IsAny<SignInRequest>()), Times.Once);
+        }
+
+        [Theory, AutoData]
+        public async Task ChangeEmail_ShouldReturnNotFoundException_WhenUserIdIsNull()
+        {
+            // Arrange
+            _userResolverServiceMock
+                .Setup(mock => mock.UserId).Returns(() => null);
+
+            // Act
+            var result = await _sut.ChangeEmail(It.IsAny<ChangeEmailRequest>());
+
+            // Assert
+            result.Result.Should().BeOfType<NotFoundResult>();
+        }
+
+        [Theory, AutoData]
+        public async Task ChangeEmail_ShouldReturnNotFoundException_WhenIdTokenIsNull(UserResponseModel user)
+        {
+            // Arrange
+            _userResolverServiceMock
+                .Setup(mock => mock.UserId)
+                .Returns(() => user.LocalId);
+
+            _userServiceMock
+                .Setup(mock => mock.GetUserAsync(user.LocalId))
+                .ReturnsAsync(user);
+
+            _userResolverServiceMock
+                .Setup(mock => mock.IdToken)
+                .Returns(() => null);
+
+            //Act
+            var result = await _sut.ChangeEmail(It.IsAny<ChangeEmailRequest>());
+
+            //Assert
+            result.Result.Should().BeOfType<NotFoundResult>();
+
+        }
+
+        [Theory, AutoData]
+        public async Task ChangeEmail_ShouldChangePassword_WhenAllChecksPass(
+            UserResponseModel user,
+            string idTokenValue,
+            ChangeEmailRequest emailRequest,
+            ChangeEmailRequestModel request,
+            ChangePasswordOrEmailResponse response
+            )
+        {
+            // Arrange
+            _userResolverServiceMock
+                .Setup(mock => mock.UserId)
+                .Returns(() => user.LocalId);
+
+            _userServiceMock
+                .Setup(mock => mock.GetUserAsync(user.LocalId))
+                .ReturnsAsync(user);
+
+            _userResolverServiceMock
+                .Setup(mock => mock.IdToken)
+                .Returns(() => idTokenValue);
+
+            request.IdToken = idTokenValue.Remove(0, 7);
+            request.ReturnSecureToken = true;
+            request.NewEmail = emailRequest.NewEmail;
+
+            _userServiceMock
+                .Setup(mock => mock.ChangeEmailAsync(user.UserId, request))
+                .ReturnsAsync(response);
+            /*
+                        It.Is<ChangePasswordOrEmailResponse>(value =>
+                            value.Email.Equals(emailRequest.NewEmail) &&
+                            value.LocalId.Equals(user.LocalId) &&
+                            value.IdToken.Equals(request.IdToken))*/
+
+            //Act
+            var result = await _sut.ChangeEmail(emailRequest);
+
+            //Assert
+            result.Result.Should().BeOfType<OkObjectResult>()
+                .Which.Value.Should().BeEquivalentTo(request);
+
         }
     }
 }

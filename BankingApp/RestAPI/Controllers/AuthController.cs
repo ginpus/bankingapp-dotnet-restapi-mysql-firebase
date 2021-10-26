@@ -9,6 +9,7 @@ using Contracts.RequestModels;
 using Contracts.ResponseModels;
 using Domain.Models.ResponseModels;
 using Domain.Services;
+using System;
 
 namespace RestAPI.Controllers
 {
@@ -50,7 +51,14 @@ namespace RestAPI.Controllers
 
         public async Task<ActionResult<EditUserResponse>> ChangePassword(ChangePasswordRequest request)
         {
-            var idTokenValue = _userResolverService.IdToken.Remove(0, 7);
+            var idToken = _userResolverService.IdToken;
+
+            if (string.IsNullOrEmpty(idToken))
+            {
+                return NotFound();
+            }
+
+            var idTokenValue = idToken.Remove(0, 7);
 
             var response = await _userService.ChangePasswordAsync(new ChangePasswordRequestModel
             {
@@ -77,7 +85,14 @@ namespace RestAPI.Controllers
 
             var user = await _userService.GetUserAsync(userId);
 
-            var idTokenValue = _userResolverService.IdToken.Remove(0, 7);
+            var idToken = _userResolverService.IdToken;
+
+            if (string.IsNullOrEmpty(idToken))
+            {
+                return NotFound();
+            }
+
+            var idTokenValue = idToken.Remove(0, 7);
 
             var response = await _userService.ChangeEmailAsync(user.UserId, new ChangeEmailRequestModel
             {
